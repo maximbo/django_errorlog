@@ -69,13 +69,20 @@ def format_post(request):
     else:
         return str(request.POST)
 
-def _log_exc_info(exc_info=None, level=logging.ERROR, aditional_lines=None):
+def _log_exc_info(exc_info=None, level=logging.ERROR, aditional_lines=None, name=None):
     '''
     Logs exception info into 'exception' and 'traceback' loggers calling
     formatting as necessary.
     '''
     exception, value, tb = exc_info or sys.exc_info()
-    exception_logger = _get_logger('exception', 'EXCEPTION_LOG_FILE')
+    
+    if name is not None:
+        except_name = "%s.%s" % (name, 'exception')
+        trace_name = "%s.%s" % (name, 'traceback')
+    else:
+        except_name, trace_name = 'exception', 'traceback'
+        
+    exception_logger = _get_logger(except_name, 'EXCEPTION_LOG_FILE')
     # find innermost call
     inner = tb
     while inner.tb_next:
@@ -92,7 +99,7 @@ def _log_exc_info(exc_info=None, level=logging.ERROR, aditional_lines=None):
     lines = traceback.format_exception(exception, value, tb)
     if aditional_lines:
         lines = aditional_lines + lines
-    traceback_logger = _get_logger('traceback', 'TRACEBACK_LOG_FILE')
+    traceback_logger = _get_logger(trace_name, 'TRACEBACK_LOG_FILE')
     traceback_logger.log(level, '\n'.join([smart_str(l) for l in lines]))
 
 def _log_request_error(sender, request, **kwargs):
